@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Veterinário</title>
+    <title>Consulta de Serviços</title>
     <!-- Adicione os links para os estilos do Bootstrap (CSS) -->
     <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -33,6 +33,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="cadastrarvet" id="cadastroVet">
                                 <i class="fas fa-stethoscope"></i> Cadastro de Veterinário
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="consultarvets" id="cadastroVet">
+                                <i class="fas fa-search"></i> Consulta de Veterinários
                             </a>
                         </li>
                         <!-- Botão de Logout -->
@@ -72,6 +77,7 @@
                      <table class="table table-striped">
                         <thead>
                             <tr>
+                                <th>Código do Pet</th>
                                 <th>Nome do Pet</th>
                                 <th>Dono do Pet</th>
                                 <th>Tipo de Serviço</th>
@@ -162,6 +168,7 @@
                                     filteredServicos.forEach(servico => {
                                         const row = document.createElement("tr");
                                         row.innerHTML = `
+                                            <td>${servico.codigoPet}</td>
                                             <td>${servico.nomePet}</td>
                                             <td>${servico.nomeDono}</td>
                                             <td>${servico.tipoServico}</td>

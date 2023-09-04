@@ -35,6 +35,11 @@
                                 <i class="fas fa-stethoscope"></i> Cadastro de Veterinário
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="consultarvets" id="cadastroVet">
+                                <i class="fas fa-search"></i> Consulta de Veterinários
+                            </a>
+                        </li>
                         <!-- Botão de Logout -->
                         <li class="nav-item mt-auto"> <!-- Adiciona margem superior automática para alinhar na parte inferior -->
                             <a class="nav-link" href="/logout" id="logoutLink">
@@ -50,7 +55,7 @@
 
 
             <div class="container mt-5">
-                <h1>Cadastro de Pet</h1>
+                <h1>Cadastro de Veterinário</h1>
                 <!-- Alerta Bootstrap de sucesso (inicialmente oculto) -->
                 <div class="alert alert-success alert-dismissible fade show mt-3" id="successAlert" style="display: none;">
                     <strong>Sucesso!</strong> O veterinário foi incluído com sucesso.
@@ -61,37 +66,18 @@
                     <strong>Erro!</strong> Houve algum problema no cadastro do veterinário.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                 </div>
-                <form id="cadastroPetForm">
+                <form id="cadastroVetForm">
                     <div class="mb-3">
-                        <label for="codigoPet" class="form-label">Código do Veterinário</label>
-                        <input type="text" class="form-control" id="codigoPet" name="codigoPet" readonly>
+                        <label for="codigoVet" class="form-label">Código do Veterinário</label>
+                        <input type="text" class="form-control" id="codigoVet" name="codigoVet" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="nomeVet" class="form-label">Nome do Veterinario</label>
-                        <input type="text" class="form-control" id="nomePet" name="nomePet" required>
+                        <input type="text" class="form-control" id="nomeVet" name="nomeVet" required>
                     </div>
                     <div class="mb-3">
-                        <label for="tipoPet" class="form-label">Tipo</label>
-                        <select class="form-select" id="tipoPet" name="tipoPet" required>
-                            <option value="cachorro">Cachorro</option>
-                            <option value="gato">Gato</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="racaPet" class="form-label">Raça</label>
-                        <input type="text" class="form-control" id="racaPet" name="racaPet">
-                    </div>
-                    <div class="mb-3">
-                        <label for="idadePet" class="form-label">Idade</label>
-                        <input type="number" class="form-control" id="idadePet" name="idadePet">
-                    </div>
-                    <div class="mb-3">
-                        <label for="nomeDono" class="form-label">Nome do Dono</label>
-                        <input type="text" class="form-control" id="nomeDono" name="nomeDono" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contatoDono" class="form-label">Contato do Dono</label>
-                        <input type="text" class="form-control" id="contatoDono" name="contatoDono" required data-inputmask="'mask': '(99) 99999-9999'">
+                        <label for="crmvVet" class="form-label">CRMV</label>
+                        <input type="text" class="form-control" id="crmvVet" name="crmvVet" required>
                     </div>
                     <button type="submit" class="btn btn-success">Cadastrar</button>
                 </form>
@@ -138,43 +124,34 @@
         // Função para gerar um código de pet com base no timestamp
          function generatePetCode() {
             const timestamp = new Date().getTime(); // Obtém o timestamp atual
-            return `PET-${timestamp}`; // Formata como "PET-timestamp"
+            return `VET-${timestamp}`; // Formata como "PET-timestamp"
         }
 
         // Preenche o campo de código do pet com o código gerado
-        $('#codigoPet').val(generatePetCode());
-
-        $(document).ready(function () {
-            // Inicialize a máscara de telefone
-            $('#contatoDono').inputmask('(99) 99999-9999');
-        });
+        $('#codigoVet').val(generatePetCode());
 
         // Função para lidar com o envio do formulário
-        $('#cadastroPetForm').submit(function (e) {
+        $('#cadastroVetForm').submit(function (e) {
             e.preventDefault(); // Evita o envio padrão do formulário
 
             // Coleta os dados do formulário
             const formData = {
-                codigoPet: $('#codigoPet').val(), // Coleta o código do pet
-                nome: $('#nomePet').val(),
-                especie: $('#tipoPet').val(),
-                raca: $('#racaPet').val(),
-                idade: $('#idadePet').val(),
-                nomeDono: $('#nomeDono').val(),
-                contatoDono: $('#contatoDono').val()
+                codigoVet: $('#codigoVet').val(), // Coleta o código do pet
+                nomeVet: $('#nomeVet').val(),
+                crmvVet: $('#crmvVet').val()
             };
 
             // Envia os dados como JSON para o backend
             $.ajax({
                 type: 'POST',
-                url: 'http://localhost:3000/pets', // Substitua pela URL do seu backend
+                url: '/veterinarios', // Substitua pela URL do seu backend
                 data: JSON.stringify(formData),
                 contentType: 'application/json',
                 success: function (response) {
                     // Trate a resposta do servidor (se necessário)
                     console.log('Pet cadastrado com sucesso:', response);
                     // Limpa o formulário
-                    $('#cadastroPetForm')[0].reset();
+                    $('#cadastroVetForm')[0].reset();
                     // Exibe o alerta de sucesso e fecha-o após 5 segundos
                     showSuccessAlert();
                     scrollToTop();

@@ -63,19 +63,31 @@ const User = mongoose.model('User', {
     password: String
 });
 
-// Dados de usuários (substitua por um banco de dados real)
-const users = [{ id: 1, username: 'usuario', password: 'senha' }];
+// Definição do modelo de Veterinario
+const Veterinario = mongoose.model('Veterinario', {
+  codigoVet: String,
+  nomeVet: String,
+  crmvVet: String
+});
 
 // Configuração para servir o arquivo index.html
 app.use(express.static(__dirname)); // Usando __dirname para o diretório atual
 
 // Rotas para a página inicial (index.html)
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  if(req.session.authenticated){
+    res.redirect('/agendar');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html')); // Não é necessário incluir "public" aqui
+    if(req.session.authenticated){
+    res.redirect('/agendar');
+  } else {
+    res.sendFile(path.join(__dirname, 'login.html')); // Não é necessário incluir "public" aqui
+  }
 });
 
 app.post('/login', async (req, res) => {
@@ -121,6 +133,10 @@ app.get('/cadastrarvet', isAuthenticated, (req, res) => {
 
 app.get('/consultaragendamentos', isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'consultarservicos.html')); // Não é necessário incluir "public" aqui
+});
+
+app.get('/consultarvets', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'consultarvets.html')); // Não é necessário incluir "public" aqui
 });
 
 // Rotas CRUD para a coleção "pet"
@@ -209,6 +225,39 @@ app.delete('/agendamentos/:id', isAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Erro ao excluir o agendamento' });
   }
 });
+
+// Rotas CRUD para a coleção "veterinarios"
+// Create (Criação de um novo pet)
+app.post('/veterinarios', isAuthenticated, async (req, res) => {
+  try {
+    const novoVet = new Veterinario(req.body);
+    await novoVet.save();
+    res.status(201).json(novoVet);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar o pet' });
+  }
+});
+
+// Read (Listagem de todos os vets)
+app.get('/veterinarios', isAuthenticated, async (req, res) => {
+  try {
+    const vets = await Veterinario.find({});
+    res.json(vets);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar os veterinarios' });
+  }
+});
+
+// Delete (Exclusão de um pet por ID)
+app.delete('/veterinarios/:id', isAuthenticated, async (req, res) => {
+  try {
+    await Veterinario.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao excluir o veterinario' });
+  }
+});
+
 
 // Middleware para verificar a autenticação
 function isAuthenticated(req, res, next) {
