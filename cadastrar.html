@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Pet</title>
+    <!-- Adicione os links para os estilos do Bootstrap (CSS) -->
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Menu lateral -->
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrar" id="cadastroLink">
+                                <i class="fas fa-paw"></i> Cadastro de PET
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="agendar" id="agendamentoLink">
+                                <i class="fas fa-calendar-alt"></i> Agendamento de Serviço
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="consultaragendamentos" id="consultaAgendamentoLink">
+                                <i class="fas fa-search"></i> Consulta de Serviços
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrarvet" id="cadastroVet">
+                                <i class="fas fa-stethoscope"></i> Cadastro de Veterinário
+                            </a>
+                        </li>
+                        <!-- Botão de Logout -->
+                        <li class="nav-item mt-auto"> <!-- Adiciona margem superior automática para alinhar na parte inferior -->
+                            <a class="nav-link" href="/logout" id="logoutLink">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
+
+            <div class="container mt-5">
+                <h1>Cadastro de Pet</h1>
+                <!-- Alerta Bootstrap de sucesso (inicialmente oculto) -->
+                <div class="alert alert-success alert-dismissible fade show mt-3" id="successAlert" style="display: none;">
+                    <strong>Sucesso!</strong> O pet foi incluído com sucesso.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                <!-- Alerta Bootstrap de erro (inicialmente oculto) -->
+                <div class="alert alert-danger alert-dismissible fade show mt-3" id="errorAlert" style="display: none;">
+                    <strong>Erro!</strong> Houve algum problema no cadastro do pet.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                <form id="cadastroPetForm">
+                    <div class="mb-3">
+                        <label for="codigoPet" class="form-label">Código do Pet</label>
+                        <input type="text" class="form-control" id="codigoPet" name="codigoPet" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomePet" class="form-label">Nome do Pet</label>
+                        <input type="text" class="form-control" id="nomePet" name="nomePet" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tipoPet" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipoPet" name="tipoPet" required>
+                            <option value="cachorro">Cachorro</option>
+                            <option value="gato">Gato</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="racaPet" class="form-label">Raça</label>
+                        <input type="text" class="form-control" id="racaPet" name="racaPet">
+                    </div>
+                    <div class="mb-3">
+                        <label for="idadePet" class="form-label">Idade</label>
+                        <input type="number" class="form-control" id="idadePet" name="idadePet">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomeDono" class="form-label">Nome do Dono</label>
+                        <input type="text" class="form-control" id="nomeDono" name="nomeDono" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contatoDono" class="form-label">Contato do Dono</label>
+                        <input type="text" class="form-control" id="contatoDono" name="contatoDono" required data-inputmask="'mask': '(99) 99999-9999'">
+                    </div>
+                    <button type="submit" class="btn btn-success">Cadastrar</button>
+                </form>
+            </div>
+
+            </main>
+        </div>
+    </div>
+
+
+    <!-- Adicione os scripts do Bootstrap e jQuery (JavaScript) -->
+
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/jquery.inputmask/dist/jquery.inputmask.bundle.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Função para rolar a tela para o topo
+        function scrollToTop() {
+            // Verifica se o navegador suporta document.documentElement
+            if (document.documentElement.scrollTop > 0) {
+                document.documentElement.scrollTop = 0;
+            } else if (document.body.scrollTop > 0) { // Caso contrário, verifica document.body
+                document.body.scrollTop = 0;
+            }
+        }
+
+        // Função para exibir o alerta de sucesso e fechá-lo após 5 segundos
+        function showSuccessAlert() {
+            $('#successAlert').fadeIn();
+            setTimeout(function () {
+                $('#successAlert').fadeOut();
+            }, 5000); // Fecha o alerta após 5 segundos (5000 milissegundos)
+        }
+
+        // Função para exibir o alerta de erro e fechá-lo após 5 segundos
+        function showErrorAlert() {
+            $('#errorAlert').fadeIn();
+            setTimeout(function () {
+                $('#errorAlert').fadeOut();
+            }, 5000); // Fecha o alerta após 5 segundos (5000 milissegundos)
+        }
+
+        // Função para gerar um código de pet com base no timestamp
+         function generatePetCode() {
+            const timestamp = new Date().getTime(); // Obtém o timestamp atual
+            return `PET-${timestamp}`; // Formata como "PET-timestamp"
+        }
+
+        // Preenche o campo de código do pet com o código gerado
+        $('#codigoPet').val(generatePetCode());
+
+        $(document).ready(function () {
+            // Inicialize a máscara de telefone
+            $('#contatoDono').inputmask('(99) 99999-9999');
+        });
+
+        // Função para lidar com o envio do formulário
+        $('#cadastroPetForm').submit(function (e) {
+            e.preventDefault(); // Evita o envio padrão do formulário
+
+            // Coleta os dados do formulário
+            const formData = {
+                codigoPet: $('#codigoPet').val(), // Coleta o código do pet
+                nome: $('#nomePet').val(),
+                especie: $('#tipoPet').val(),
+                raca: $('#racaPet').val(),
+                idade: $('#idadePet').val(),
+                nomeDono: $('#nomeDono').val(),
+                contatoDono: $('#contatoDono').val()
+            };
+
+            // Envia os dados como JSON para o backend
+            $.ajax({
+                type: 'POST',
+                url: '/pets', // Substitua pela URL do seu backend
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                success: function (response) {
+                    // Trate a resposta do servidor (se necessário)
+                    console.log('Pet cadastrado com sucesso:', response);
+                    // Limpa o formulário
+                    $('#cadastroPetForm')[0].reset();
+                    // Exibe o alerta de sucesso e fecha-o após 5 segundos
+                    showSuccessAlert();
+                    scrollToTop();
+                },
+                error: function (error) {
+                    // Trate erros de envio (se necessário)
+                    console.error('Erro ao cadastrar o pet:', error);
+                    showErrorAlert();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

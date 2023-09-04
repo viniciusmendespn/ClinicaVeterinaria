@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Veterinário</title>
+    <!-- Adicione os links para os estilos do Bootstrap (CSS) -->
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Menu lateral -->
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrar" id="cadastroLink">
+                                <i class="fas fa-paw"></i> Cadastro de PET
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="agendar" id="agendamentoLink">
+                                <i class="fas fa-calendar-alt"></i> Agendamento de Serviço
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="consultaragendamentos" id="consultaAgendamentoLink">
+                                <i class="fas fa-search"></i> Consulta de Serviços
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrarvet" id="cadastroVet">
+                                <i class="fas fa-stethoscope"></i> Cadastro de Veterinário
+                            </a>
+                        </li>
+                        <!-- Botão de Logout -->
+                        <li class="nav-item mt-auto"> <!-- Adiciona margem superior automática para alinhar na parte inferior -->
+                            <a class="nav-link" href="/logout" id="logoutLink">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="container mt-5">
+                    <h2>Lista de Pets</h2>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="filterInput" placeholder="Filtrar..." >
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Código Pet</th>
+                                <th>Nome</th>
+                                <th>Espécie</th>
+                                <th>Raça</th>
+                                <th>Nome do Dono</th>
+                                <th>Contato do Dono</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="petTableBody">
+                            <!-- Os dados da tabela serão preenchidos aqui -->
+                        </tbody>
+                    </table>
+                    <div id="agendamentoFormContainer"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- Adicione os scripts do Bootstrap e jQuery (JavaScript) -->
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/jquery.inputmask/dist/jquery.inputmask.bundle.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Função para exibir o alerta de sucesso e fechá-lo após 5 segundos
+        function showSuccessAlert() {
+            $('#successAlert').fadeIn();
+            setTimeout(function () {
+                $('#successAlert').fadeOut();
+            }, 5000); // Fecha o alerta após 5 segundos (5000 milissegundos)
+        }
+
+        // Quando a página é carregada
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/pets")
+                .then(response => response.json())
+                .then(data => {
+                    const petTableBody = document.getElementById("petTableBody");
+                    const filterInput = document.getElementById("filterInput");
+
+                    // Função para atualizar a tabela com os dados filtrados
+                    function updateTable() {
+                        const filterValue = filterInput.value.toLowerCase();
+                        const filteredPets = data.filter(pet =>
+                            pet.codigoPet.toLowerCase().includes(filterValue) ||
+                            pet.nome.toLowerCase().includes(filterValue) ||
+                            pet.especie.toLowerCase().includes(filterValue) ||
+                            pet.raca.toLowerCase().includes(filterValue) ||
+                            pet.nomeDono.toLowerCase().includes(filterValue) ||
+                            pet.contatoDono.toLowerCase().includes(filterValue)
+                        );
+
+                        // Limpa a tabela antes de preenchê-la novamente
+                        petTableBody.innerHTML = "";
+
+                        // Preenche a tabela com os dados filtrados
+                        filteredPets.forEach(pet => {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td>${pet.codigoPet}</td>
+                                <td>${pet.nome}</td>
+                                <td>${pet.especie}</td>
+                                <td>${pet.raca}</td>
+                                <td>${pet.nomeDono}</td>
+                                <td>${pet.contatoDono}</td>
+                                <td></td> <!-- Coluna vazia para o botão "Agendar Serviço" -->
+                            `;
+
+                            // Cria o botão "Agendar Serviço" e adiciona à coluna
+                            const agendarButtonCell = row.querySelector("td:last-child");
+                            agendarButtonCell.appendChild(createAgendarButton(pet));
+
+                            petTableBody.appendChild(row);
+                        });
+                    }
+
+                    // Adiciona um ouvinte de evento ao campo de filtro
+                    filterInput.addEventListener("input", updateTable);
+
+                    // Preenche a tabela inicialmente
+                    updateTable();
+                })
+                .catch(error => {
+                    console.error("Erro ao buscar dados de pets:", error);
+                });
+
+                // Função para criar o botão "Agendar Serviço" em cada linha da tabela
+                function createAgendarButton(pet) {
+                    const button = document.createElement("button");
+                    button.className = "btn btn-primary btn-sm";
+                    button.textContent = "Agendar Serviço";
+                    button.addEventListener("click", () => {
+                        showAgendamentoForm(pet);
+                    });
+                    return button;
+                }
+
+                // Função para mostrar o formulário de agendamento
+                function showAgendamentoForm(pet) {
+                    const formContainer = document.getElementById("agendamentoFormContainer");
+                    formContainer.innerHTML = `
+                        <h4>Agendar Serviço para ${pet.nome}</h4>
+                        <!-- Alerta Bootstrap de sucesso (inicialmente oculto) -->
+                        <div class="alert alert-success alert-dismissible fade show mt-3" id="successAlert" style="display: none;">
+                            <strong>Sucesso!</strong> O serviço foi agendado com sucesso.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                        <form id="agendamentoForm">
+                            <div class="mb-3">
+                                <label for="codigoPet">Código Pet</label>
+                                <input type="text" class="form-control" id="codigoPet" name="codigoPet" value="${pet.codigoPet}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipoServico">Tipo de Serviço</label>
+                                <select class="form-control" id="tipoServico" name="tipoServico">
+                                    <option value="Banho">Banho</option>
+                                    <option value="Tosa">Tosa</option>
+                                    <option value="Banho + Tosa">Banho + Tosa</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dataAgendamento">Data de Agendamento</label>
+                                <input type="date" class="form-control" id="dataAgendamento" name="dataAgendamento">
+                            </div>
+                            <div class="mb-3">
+                                <label for="horarioAgendamento">Horário</label>
+                                <input type="time" class="form-control" id="horarioAgendamento" name="horarioAgendamento">
+                            </div>
+                            <button type="submit" class="btn btn-success">Agendar</button>
+                        </form>
+                    `;
+
+                    const agendamentoForm = document.getElementById("agendamentoForm");
+                    agendamentoForm.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(agendamentoForm);
+                        const agendamentoData = {
+                            codigoPet: formData.get("codigoPet"),
+                            tipoServico: formData.get("tipoServico"),
+                            dataAgendamento: formData.get("dataAgendamento"),
+                            horarioAgendamento: formData.get("horarioAgendamento")
+                        };
+
+                    // Envie a solicitação POST para /agendar com os dados em formato JSON
+                    fetch("/agendar", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(agendamentoData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Handle the response, e.g., show a success message
+                            console.log("Agendamento bem-sucedido:", data);
+                            showSuccessAlert();
+                            // Você pode adicionar uma mensagem de sucesso aqui
+                        })
+                        .catch(error => {
+                            console.error("Erro ao agendar serviço:", error);
+                            // Você pode adicionar uma mensagem de erro aqui
+                        });
+                });
+            }
+
+        });
+
+    </script>
+</body>
+</html>

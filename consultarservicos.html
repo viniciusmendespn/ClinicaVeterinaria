@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Veterinário</title>
+    <!-- Adicione os links para os estilos do Bootstrap (CSS) -->
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Menu lateral -->
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrar" id="cadastroLink">
+                                <i class="fas fa-paw"></i> Cadastro de PET
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="agendar" id="agendamentoLink">
+                                <i class="fas fa-calendar-alt"></i> Agendamento de Serviço
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="consultaragendamentos" id="consultaAgendamentoLink">
+                                <i class="fas fa-search"></i> Consulta de Serviços
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="cadastrarvet" id="cadastroVet">
+                                <i class="fas fa-stethoscope"></i> Cadastro de Veterinário
+                            </a>
+                        </li>
+                        <!-- Botão de Logout -->
+                        <li class="nav-item mt-auto"> <!-- Adiciona margem superior automática para alinhar na parte inferior -->
+                            <a class="nav-link" href="/logout" id="logoutLink">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Tem certeza de que deseja excluir este agendamento?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Confirmar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container mt-5">
+                    <h2>Consulta de Serviços</h2>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="agendamentoFilter" placeholder="Filtrar..." >
+                    </div>
+                     <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome do Pet</th>
+                                <th>Dono do Pet</th>
+                                <th>Tipo de Serviço</th>
+                                <th>Data de Agendamento</th>
+                                <th>Horário de Agendamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agendamentoTableBody">
+                            <!-- Os dados da tabela serão preenchidos aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+<!-- Adicione o link para o JavaScript do Bootstrap (substitua a URL pelo caminho correto) -->
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/jquery.inputmask/dist/jquery.inputmask.bundle.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Função para exibir o alerta de sucesso e fechá-lo após 5 segundos
+        function showSuccessAlert() {
+            $('#successAlert').fadeIn();
+            setTimeout(function () {
+                $('#successAlert').fadeOut();
+            }, 5000); // Fecha o alerta após 5 segundos (5000 milissegundos)
+        }
+
+        // Quando a página é carregada
+        document.addEventListener("DOMContentLoaded", function () {
+            
+            function updateAll() {
+                fetch("/agendamentos")
+                    .then(response => response.json())
+                    .then(data => {
+                        const agendamentoTableBody = document.getElementById("agendamentoTableBody");
+                        const agendamentoFilter = document.getElementById("agendamentoFilter");
+                        const filterInput = document.getElementById("agendamentoFilter"); // Adicione esta linha
+
+                        // Criar um array de promessas para todas as chamadas AJAX
+                        const ajaxPromises = data.map(servico => {
+                            return new Promise((resolve, reject) => {
+                                $.ajax({
+                                    type: 'GET',
+                                    url: '/pets/'+servico.codigoPet, // Substitua pela URL do seu backend
+                                    contentType: 'application/json',
+                                    success: function (response) {
+                                        // Trate a resposta do servidor (se necessário)
+                                        servico.nomePet = response.nome;
+                                        servico.nomeDono = response.nomeDono;
+                                        resolve(servico); // Resolva a promessa com os dados atualizados
+                                    },
+                                    error: function (error) {
+                                        // Trate erros de envio (se necessário)
+                                        console.error('Erro ao pesquisar o pet:', error);
+                                        reject(error); // Rejeite a promessa em caso de erro
+                                    }
+                                });
+                            });
+                        });
+
+
+
+                        // Aguarde todas as chamadas AJAX serem concluídas antes de continuar
+                        Promise.all(ajaxPromises)
+                            .then(servicosAtualizados => {
+                                // Atualize o array "data" com os dados atualizados
+                                data = servicosAtualizados;
+
+                                // Função para atualizar a tabela com os dados filtrados
+                                function updateTable() {
+                                    const filterValue = filterInput.value.toLowerCase();
+                                    const filteredServicos = data.filter(servico =>
+                                        servico.nomePet.toLowerCase().includes(filterValue) ||
+                                        servico.nomeDono.toLowerCase().includes(filterValue) ||
+                                        servico.tipoServico.toLowerCase().includes(filterValue) ||
+                                        servico.dataAgendamento.toLowerCase().includes(filterValue) ||
+                                        servico.horarioAgendamento.toLowerCase().includes(filterValue)
+                                    );
+                                    
+                                    // Limpa a tabela antes de preenchê-la novamente
+                                    agendamentoTableBody.innerHTML = "";
+
+                                    // Preenche a tabela com os dados filtrados
+                                    filteredServicos.forEach(servico => {
+                                        const row = document.createElement("tr");
+                                        row.innerHTML = `
+                                            <td>${servico.nomePet}</td>
+                                            <td>${servico.nomeDono}</td>
+                                            <td>${servico.tipoServico}</td>
+                                            <td>${servico.dataAgendamento}</td>
+                                            <td>${servico.horarioAgendamento}</td>
+                                            <td>
+                                                <button class="btn btn-danger btn-sm delete-button" id="openModalButton" data-id="${servico._id}">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        `;
+
+                                        // Adicione um evento de clique ao botão de exclusão
+                                        const deleteButton = row.querySelector(".delete-button");
+                                        deleteButton.addEventListener("click", function () {
+                                            var myModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                                            myModal.show();
+                                            const agendamentoId = this.getAttribute("data-id");
+                                            // Defina o ID do agendamento a ser excluído para uso no modal de confirmação
+                                            document.getElementById("confirmDeleteButton").setAttribute("data-id", agendamentoId);
+                                        });
+
+                                        // Adicione a linha à tabela
+                                        agendamentoTableBody.appendChild(row);
+                                    });
+                                }
+
+                                // Adicione um evento de clique ao botão de confirmação no modal
+                                document.getElementById("confirmDeleteButton").addEventListener("click", function () {
+                                    const agendamentoId = this.getAttribute("data-id");
+                                    // Faça uma chamada AJAX DELETE para excluir o agendamento com base no agendamentoId
+                                    $.ajax({
+                                        type: 'DELETE',
+                                        url: '/agendamentos/' + agendamentoId, // Substitua pela URL do seu backend
+                                        success: function () {
+                                            // Atualize a tabela após a exclusão (você pode recarregar os dados ou remover a linha da tabela)
+                                            updateAll();
+                                            // Feche o modal de confirmação
+                                            $('#confirmDeleteModal').modal('hide');
+                                        },
+                                        error: function (error) {
+                                            // Trate erros de exclusão, se necessário
+                                            console.error('Erro ao excluir o agendamento:', error);
+                                        }
+                                    });
+                                });
+
+                                // Adiciona um ouvinte de evento ao campo de filtro
+                                filterInput.addEventListener("input", updateTable);
+
+                                // Preenche a tabela inicialmente
+                                updateTable();
+                            })
+                            .catch(error => {
+                                console.error("Erro ao buscar dados de pets:", error);
+                            });
+                    })
+                    .catch(error => {
+                        console.error("Erro ao buscar dados de serviços:", error);
+                    });
+            };
+
+            updateAll(); //rodar primeira vez
+        });
+    </script>
+</body>
+</html>
+
