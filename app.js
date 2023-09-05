@@ -52,9 +52,12 @@ const Pet = mongoose.model('pet', {
 // Definição do modelo de Servico
 const Servico = mongoose.model('servico', {
   codigoPet: String,
+  nomePet: String,
+  nomeDono: String,
   tipoServico: String,
   dataAgendamento: String,
-  horarioAgendamento: String
+  horarioAgendamento: String,
+  veterinario: String
 });
 
 // Definição do modelo de User

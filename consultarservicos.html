@@ -82,7 +82,8 @@
                                 <th>Dono do Pet</th>
                                 <th>Tipo de Serviço</th>
                                 <th>Data de Agendamento</th>
-                                <th>Horário de Agendamento</th>
+                                <th>Horário</th>
+                                <th>Veterinário</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -120,111 +121,80 @@
                         const agendamentoFilter = document.getElementById("agendamentoFilter");
                         const filterInput = document.getElementById("agendamentoFilter"); // Adicione esta linha
 
-                        // Criar um array de promessas para todas as chamadas AJAX
-                        const ajaxPromises = data.map(servico => {
-                            return new Promise((resolve, reject) => {
-                                $.ajax({
-                                    type: 'GET',
-                                    url: '/pets/'+servico.codigoPet, // Substitua pela URL do seu backend
-                                    contentType: 'application/json',
-                                    success: function (response) {
-                                        // Trate a resposta do servidor (se necessário)
-                                        servico.nomePet = response.nome;
-                                        servico.nomeDono = response.nomeDono;
-                                        resolve(servico); // Resolva a promessa com os dados atualizados
-                                    },
-                                    error: function (error) {
-                                        // Trate erros de envio (se necessário)
-                                        console.error('Erro ao pesquisar o pet:', error);
-                                        reject(error); // Rejeite a promessa em caso de erro
-                                    }
+                        // Função para atualizar a tabela com os dados filtrados
+                        function updateTable() {
+                            const filterValue = filterInput.value.toLowerCase();
+                            const filteredServicos = data.filter(servico =>
+                                servico.nomePet.toLowerCase().includes(filterValue) ||
+                                servico.nomeDono.toLowerCase().includes(filterValue) ||
+                                servico.tipoServico.toLowerCase().includes(filterValue) ||
+                                servico.dataAgendamento.toLowerCase().includes(filterValue) ||
+                                servico.horarioAgendamento.toLowerCase().includes(filterValue) ||
+                                servico.veterinario.toLowerCase().includes(filterValue)
+                            );
+                            
+                            // Limpa a tabela antes de preenchê-la novamente
+                            agendamentoTableBody.innerHTML = "";
+
+                            // Preenche a tabela com os dados filtrados
+                            filteredServicos.forEach(servico => {
+                                const row = document.createElement("tr");
+                                row.innerHTML = `
+                                    <td>${servico.codigoPet}</td>
+                                    <td>${servico.nomePet}</td>
+                                    <td>${servico.nomeDono}</td>
+                                    <td>${servico.tipoServico}</td>
+                                    <td>${servico.dataAgendamento}</td>
+                                    <td>${servico.horarioAgendamento}</td>
+                                    <td>${servico.veterinario}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm delete-button" id="openModalButton" data-id="${servico._id}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                `;
+
+                                // Adicione um evento de clique ao botão de exclusão
+                                const deleteButton = row.querySelector(".delete-button");
+                                deleteButton.addEventListener("click", function () {
+                                    var myModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                                    myModal.show();
+                                    const agendamentoId = this.getAttribute("data-id");
+                                    // Defina o ID do agendamento a ser excluído para uso no modal de confirmação
+                                    document.getElementById("confirmDeleteButton").setAttribute("data-id", agendamentoId);
                                 });
+
+                                // Adicione a linha à tabela
+                                agendamentoTableBody.appendChild(row);
+                            });
+                        }
+
+                        // Adicione um evento de clique ao botão de confirmação no modal
+                        document.getElementById("confirmDeleteButton").addEventListener("click", function () {
+                            const agendamentoId = this.getAttribute("data-id");
+                            // Faça uma chamada AJAX DELETE para excluir o agendamento com base no agendamentoId
+                            $.ajax({
+                                type: 'DELETE',
+                                url: '/agendamentos/' + agendamentoId, // Substitua pela URL do seu backend
+                                success: function () {
+                                    // Atualize a tabela após a exclusão (você pode recarregar os dados ou remover a linha da tabela)
+                                    updateAll();
+                                    // Feche o modal de confirmação
+                                    $('#confirmDeleteModal').modal('hide');
+                                },
+                                error: function (error) {
+                                    // Trate erros de exclusão, se necessário
+                                    console.error('Erro ao excluir o agendamento:', error);
+                                }
                             });
                         });
 
+                        // Adiciona um ouvinte de evento ao campo de filtro
+                        filterInput.addEventListener("input", updateTable);
 
-
-                        // Aguarde todas as chamadas AJAX serem concluídas antes de continuar
-                        Promise.all(ajaxPromises)
-                            .then(servicosAtualizados => {
-                                // Atualize o array "data" com os dados atualizados
-                                data = servicosAtualizados;
-
-                                // Função para atualizar a tabela com os dados filtrados
-                                function updateTable() {
-                                    const filterValue = filterInput.value.toLowerCase();
-                                    const filteredServicos = data.filter(servico =>
-                                        servico.nomePet.toLowerCase().includes(filterValue) ||
-                                        servico.nomeDono.toLowerCase().includes(filterValue) ||
-                                        servico.tipoServico.toLowerCase().includes(filterValue) ||
-                                        servico.dataAgendamento.toLowerCase().includes(filterValue) ||
-                                        servico.horarioAgendamento.toLowerCase().includes(filterValue)
-                                    );
-                                    
-                                    // Limpa a tabela antes de preenchê-la novamente
-                                    agendamentoTableBody.innerHTML = "";
-
-                                    // Preenche a tabela com os dados filtrados
-                                    filteredServicos.forEach(servico => {
-                                        const row = document.createElement("tr");
-                                        row.innerHTML = `
-                                            <td>${servico.codigoPet}</td>
-                                            <td>${servico.nomePet}</td>
-                                            <td>${servico.nomeDono}</td>
-                                            <td>${servico.tipoServico}</td>
-                                            <td>${servico.dataAgendamento}</td>
-                                            <td>${servico.horarioAgendamento}</td>
-                                            <td>
-                                                <button class="btn btn-danger btn-sm delete-button" id="openModalButton" data-id="${servico._id}">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                        `;
-
-                                        // Adicione um evento de clique ao botão de exclusão
-                                        const deleteButton = row.querySelector(".delete-button");
-                                        deleteButton.addEventListener("click", function () {
-                                            var myModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-                                            myModal.show();
-                                            const agendamentoId = this.getAttribute("data-id");
-                                            // Defina o ID do agendamento a ser excluído para uso no modal de confirmação
-                                            document.getElementById("confirmDeleteButton").setAttribute("data-id", agendamentoId);
-                                        });
-
-                                        // Adicione a linha à tabela
-                                        agendamentoTableBody.appendChild(row);
-                                    });
-                                }
-
-                                // Adicione um evento de clique ao botão de confirmação no modal
-                                document.getElementById("confirmDeleteButton").addEventListener("click", function () {
-                                    const agendamentoId = this.getAttribute("data-id");
-                                    // Faça uma chamada AJAX DELETE para excluir o agendamento com base no agendamentoId
-                                    $.ajax({
-                                        type: 'DELETE',
-                                        url: '/agendamentos/' + agendamentoId, // Substitua pela URL do seu backend
-                                        success: function () {
-                                            // Atualize a tabela após a exclusão (você pode recarregar os dados ou remover a linha da tabela)
-                                            updateAll();
-                                            // Feche o modal de confirmação
-                                            $('#confirmDeleteModal').modal('hide');
-                                        },
-                                        error: function (error) {
-                                            // Trate erros de exclusão, se necessário
-                                            console.error('Erro ao excluir o agendamento:', error);
-                                        }
-                                    });
-                                });
-
-                                // Adiciona um ouvinte de evento ao campo de filtro
-                                filterInput.addEventListener("input", updateTable);
-
-                                // Preenche a tabela inicialmente
-                                updateTable();
-                            })
-                            .catch(error => {
-                                console.error("Erro ao buscar dados de pets:", error);
-                            });
+                        // Preenche a tabela inicialmente
+                        updateTable();
+  
                     })
                     .catch(error => {
                         console.error("Erro ao buscar dados de serviços:", error);

@@ -180,6 +180,7 @@
                     console.log('Pet cadastrado com sucesso:', response);
                     // Limpa o formulário
                     $('#cadastroPetForm')[0].reset();
+                    $('#codigoPet').val(generatePetCode());
                     // Exibe o alerta de sucesso e fecha-o após 5 segundos
                     showSuccessAlert();
                     scrollToTop();

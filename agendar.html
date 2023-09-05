@@ -152,13 +152,23 @@
                     button.className = "btn btn-primary btn-sm";
                     button.textContent = "Agendar Serviço";
                     button.addEventListener("click", () => {
-                        showAgendamentoForm(pet);
+                        $.ajax({
+                            type: 'GET',
+                            url: '/veterinarios', // Substitua pela URL correta
+                            dataType: 'json',
+                            success: function (data) {
+                                showAgendamentoForm(pet, data);
+                            },
+                            error: function (error) {
+                                console.error('Erro ao obter nomes de veterinários:', error);
+                            }
+                        });
                     });
                     return button;
                 }
 
                 // Função para mostrar o formulário de agendamento
-                function showAgendamentoForm(pet) {
+                function showAgendamentoForm(pet, veterinarios) {
                     const formContainer = document.getElementById("agendamentoFormContainer");
                     formContainer.innerHTML = `
                         <h4>Agendar Serviço para ${pet.nome}</h4>
@@ -168,15 +178,23 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                         </div>
                         <form id="agendamentoForm">
-                            <div class="mb-3">
+                            <div class="mb-3" hidden>
                                 <label for="codigoPet">Código Pet</label>
-                                <input type="text" class="form-control" id="codigoPet" name="codigoPet" value="${pet.codigoPet}" readonly>
+                                <input type="text" class="form-control" id="codigoPet" name="codigoPet" value="${pet.codigoPet}" >
+                            </div>
+                            <div class="mb-3" hidden>
+                                <label for="nome">Nome Pet</label>
+                                <input type="text" class="form-control" id="nome" name="nome" value="${pet.nome}" >
+                            </div>
+                            <div class="mb-3" hidden>
+                                <label for="nomeDono">Dono do Pet</label>
+                                <input type="text" class="form-control" id="nomeDono" name="nomeDono" value="${pet.nomeDono}" >
                             </div>
                             <div class="mb-3">
                                 <label for="tipoServico">Tipo de Serviço</label>
                                 <select class="form-control" id="tipoServico" name="tipoServico">
-                                    <option value="Banho">Consulta</option>
-                                    <option value="Tosa">Exame</option>
+                                    <option value="Consulta">Consulta</option>
+                                    <option value="Exame">Exame</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -187,9 +205,23 @@
                                 <label for="horarioAgendamento">Horário</label>
                                 <input type="time" class="form-control" id="horarioAgendamento" name="horarioAgendamento">
                             </div>
-                            <button type="submit" class="btn btn-success">Agendar</button>
+                            <div class="mb-3">
+                                <label for="veterinario">Veterinário</label>
+                                <select class="form-control" id="veterinario" name="veterinario"></select>
+                            </div>
+                            <button type="submit" class="mb-3 btn btn-success">Agendar</button>
                         </form>
                     `;
+
+                    // Obtenha uma referência ao elemento <select> existente
+                    const selectVets = document.getElementById("veterinario");
+
+                    veterinarios.forEach((veterinario) => {
+                        const option = document.createElement("option");
+                        option.value = veterinario.nomeVet; // O valor da opção será o nome do veterinário
+                        option.textContent = veterinario.nomeVet; // O texto da opção também será o nome do veterinário
+                        selectVets.appendChild(option);
+                    });
 
                     const agendamentoForm = document.getElementById("agendamentoForm");
                     agendamentoForm.addEventListener("submit", (e) => {
@@ -197,10 +229,16 @@
                         const formData = new FormData(agendamentoForm);
                         const agendamentoData = {
                             codigoPet: formData.get("codigoPet"),
+                            nomePet: formData.get("nome"),
+                            nomeDono: formData.get("nomeDono"),
                             tipoServico: formData.get("tipoServico"),
                             dataAgendamento: formData.get("dataAgendamento"),
-                            horarioAgendamento: formData.get("horarioAgendamento")
+                            horarioAgendamento: formData.get("horarioAgendamento"),
+                            veterinario: formData.get("veterinario")
                         };
+
+
+                    console.log(agendamentoData);
 
                     // Envie a solicitação POST para /agendar com os dados em formato JSON
                     fetch("/agendar", {
